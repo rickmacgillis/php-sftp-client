@@ -12,13 +12,12 @@
 namespace FtpClient;
 
 use \Countable;
-use DateTime;
-use FtpClient\Objects\ListingRow;
 
 /**
  * The FTP and SSL-FTP client for PHP.
  *
  * @method bool alloc(int $filesize, string &$result = null) Allocates space for a file to be uploaded
+ * @method bool append(string $remote_file, string $local_file, int $mode = FTP_BINARY) Append the contents of a file to another file on the FTP server
  * @method bool cdup() Changes to the parent directory
  * @method bool chdir(string $directory) Changes the current directory on a FTP server
  * @method int chmod(int $mode, string $filename) Set permissions on a file via FTP
@@ -454,8 +453,19 @@ class FtpClient implements Countable
 
         try {
             if (@$this->ftp->delete($path)
-            or ($this->isDir($path) and $this->rmdir($path, $recursive))) {
+            or ($this->isDir($path)
+            and $this->rmdir($path, $recursive))) {
                 return true;
+            } else {
+                // in special cases the delete can fail (for example, at Symfony's "r+e.gex[c]a(r)s" directory)
+                $newPath = preg_replace('/[^A-Za-z0-9\/]/', '', $path);
+                if ($this->rename($path, $newPath)) {
+                    if (@$this->ftp->delete($newPath)
+                    or ($this->isDir($newPath)
+                    and $this->rmdir($newPath, $recursive))) {
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -497,7 +507,7 @@ class FtpClient implements Countable
      */
     public function isEmpty($directory)
     {
-        return $this->count($directory, null, false) === 0 ? true : false;
+        return $this->countItems($directory, null, false) === 0 ? true : false;
     }
 
     /**
@@ -543,7 +553,7 @@ class FtpClient implements Countable
      * @param  bool        $recursive true by default
      * @return int
      */
-    public function count($directory = '.', $type = null, $recursive = true)
+    public function countItems($directory = '.', $type = null, $recursive = true)
     {
         $items  = (null === $type ? $this->nlist($directory, $recursive)
             : $this->scanDir($directory, $recursive));
@@ -559,6 +569,18 @@ class FtpClient implements Countable
     }
 
     /**
+     * Count the items (file, directory, link, unknown).
+     * This method call `countItems()` with the default arguments.
+     *
+     * @see countItems
+     * @return int
+     */
+    public function count(): int
+    {
+        return $this->countItems();
+    }
+
+    /**
      * Downloads a file from the FTP server into a string
      *
      * @param  string $remote_file
@@ -570,7 +592,7 @@ class FtpClient implements Countable
     {
         $handle = fopen('php://temp', 'r+');
 
-        if ($this->fget($handle, $remote_file, $mode, $resumepos)) {
+        if ($this->ftp->fget($handle, $remote_file, $mode, $resumepos)) {
             rewind($handle);
             return stream_get_contents($handle);
         }
@@ -642,7 +664,6 @@ class FtpClient implements Countable
 
                 // do the following if it is a directory
                 if (is_dir($source_directory.'/'.$file)) {
-
                     if (!$this->isDir($target_directory.'/'.$file)) {
 
                         // create directories that do not yet exist
@@ -680,21 +701,21 @@ class FtpClient implements Countable
      */
     public function getAll($source_directory, $target_directory, $mode = FTP_BINARY)
     {
-        if ($source_directory != ".") { 
-            if ($this->ftp->chdir($source_directory) == false) { 
+        if ($source_directory != ".") {
+            if ($this->ftp->chdir($source_directory) == false) {
                 throw new FtpException("Unable to change directory: ".$source_directory);
             }
 
-            if (!(is_dir($source_directory))) {
-                mkdir($source_directory);
+            if (!(is_dir($target_directory))) {
+                mkdir($target_directory);
 	    }
 
-            chdir($source_directory); 
-        } 
+            chdir($target_directory);
+        }
 
         $contents = $this->ftp->nlist(".");
 
-        foreach ($contents as $file) { 
+        foreach ($contents as $file) {
             if ($file == '.' || $file == '..') {
                 continue;
 	    }
@@ -702,8 +723,8 @@ class FtpClient implements Countable
             $this->ftp->get($target_directory."/".$file, $file, $mode);
         }
 
-        $this->ftp->chdir(".."); 
-        chdir(".."); 
+        $this->ftp->chdir("..");
+        chdir("..");
 
         return $this;
     }
@@ -724,7 +745,7 @@ class FtpClient implements Countable
         if (!$this->isDir($directory)) {
             throw new FtpException('"'.$directory.'" is not a directory.');
         }
-        
+
         if (strpos($directory, " ") > 0) {
             $ftproot = $this->ftp->pwd();
             $this->ftp->chdir($directory);
@@ -733,7 +754,7 @@ class FtpClient implements Countable
         } else {
             $list  = $this->ftp->rawlist($directory);
         }
-        
+
         $items = array();
 
         if (!$list) {
@@ -743,20 +764,28 @@ class FtpClient implements Countable
         if (false == $recursive) {
             foreach ($list as $path => $item) {
                 $chunks = preg_split("/\s+/", $item);
-                $listItems = $this->makeListingRow($chunks);
 
                 // if not "name"
-                if (empty($listItems->name) || $listItems->name == '.' || $listItems->name == '..') {
+                if (!isset($chunks[8]) || strlen($chunks[8]) === 0 || $chunks[8] == '.' || $chunks[8] == '..') {
                     continue;
                 }
 
-                $path = $directory.'/'.$listItems->name;
+                $path = $directory.'/'.$chunks[8];
+
+                if (isset($chunks[9])) {
+                    $nbChunks = count($chunks);
+
+                    for ($i = 9; $i < $nbChunks; $i++) {
+                        $path .= ' '.$chunks[$i];
+                    }
+                }
+
 
                 if (substr($path, 0, 2) == './') {
                     $path = substr($path, 2);
                 }
 
-                $items[$listItems->type.'#'.$path ] = $item;
+                $items[ $this->rawToType($item).'#'.$path ] = $item;
             }
 
             return $items;
@@ -780,20 +809,27 @@ class FtpClient implements Countable
             }
 
             $chunks = preg_split("/\s+/", $item);
-            $listItems = $this->makeListingRow($chunks);
 
             // if not "name"
-            if (empty($listItems->name) || $listItems->name == '.' || $listItems->name == '..') {
+            if (!isset($chunks[8]) || strlen($chunks[8]) === 0 || $chunks[8] == '.' || $chunks[8] == '..') {
                 continue;
             }
 
-            $path = $directory.'/'.$listItems->name;
+            $path = $directory.'/'.$chunks[8];
+
+            if (isset($chunks[9])) {
+                $nbChunks = count($chunks);
+
+                for ($i = 9; $i < $nbChunks; $i++) {
+                    $path .= ' '.$chunks[$i];
+                }
+            }
 
             if (substr($path, 0, 2) == './') {
                 $path = substr($path, 2);
             }
 
-            $items[$listItems->type.'#'.$path] = $item;
+            $items[$this->rawToType($item).'#'.$path] = $item;
 
             if ($item[0] == 'd') {
                 $sublist = $this->rawlist($path, true);
@@ -822,40 +858,60 @@ class FtpClient implements Countable
         $path  = '';
 
         foreach ($rawlist as $key => $child) {
-        	$chunks = preg_split("/\s+/", $child, 9);
-        	
-        	if (count($chunks) === 1) {
-        		$len = strlen($chunks[0]);
-        		
-        		if ($len && $chunks[0][$len-1] == ':') {
-        			$path = substr($chunks[0], 0, -1);
-        		}
-        		
-        		continue;
-        	}
-        	
-        	$listItems = $this->makeListingRow($chunks);
+            $chunks = preg_split("/\s+/", $child, 9);
 
-            if (isset($listItems->name) && ($listItems->name == '.' or $listItems->name == '..')) {
+            if (isset($chunks[8]) && ($chunks[8] == '.' or $chunks[8] == '..')) {
                 continue;
             }
 
+            if (count($chunks) === 1) {
+                $len = strlen($chunks[0]);
+
+                if ($len && $chunks[0][$len-1] == ':') {
+                    $path = substr($chunks[0], 0, -1);
+                }
+
+                continue;
+            }
+
+            // Prepare for filename that has space
+            $nameSlices = array_slice($chunks, 8, true);
+
+            $item = [
+                'permissions' => $chunks[0],
+                'number'      => $chunks[1],
+                'owner'       => $chunks[2],
+                'group'       => $chunks[3],
+                'size'        => $chunks[4],
+                'month'       => $chunks[5],
+                'day'         => $chunks[6],
+                'time'        => $chunks[7],
+                'name'        => implode(' ', $nameSlices),
+                'type'        => $this->rawToType($chunks[0]),
+            ];
+
+            if ($item['type'] == 'link' && isset($chunks[10])) {
+                $item['target'] = $chunks[10]; // 9 is "->"
+            }
+
             // if the key is not the path, behavior of ftp_rawlist() PHP function
-            if (is_int($key) || false === strpos($key, $listItems->name)) {
+            if (is_int($key) || false === strpos($key, $item['name'])) {
                 array_splice($chunks, 0, 8);
 
-                $key = $listItems->type . '#' . ($path ? $path.'/' : '') . implode(' ', $chunks);
+                $key = $item['type'].'#'
+                    .($path ? $path.'/' : '')
+                    .implode(' ', $chunks);
 
-                if ($listItems->type == 'link') {
+                if ($item['type'] == 'link') {
                     // get the first part of 'link#the-link.ext -> /path/of/the/source.ext'
                     $exp = explode(' ->', $key);
                     $key = rtrim($exp[0]);
                 }
 
-                $items[$key] = (array)$listItems;
+                $items[$key] = $item;
             } else {
                 // the key is the path, behavior of FtpClient::rawlist() method()
-            	$items[$key] = (array)$listItems;
+                $items[$key] = $item;
             }
         }
 
@@ -909,67 +965,4 @@ class FtpClient implements Countable
 
         return $this;
     }
-    
-    protected function makeListingRow(array $listChunks) {
-    	
-    	// Windows has date first, Linux has permissions first
-    	$isWin = preg_match('/\\d/', $listChunks[0]) > 0;
-    	
-    	return $isWin ? $this->makeWindowsListingRow($listChunks) : $this->makeLinuxListingRow($listChunks);
-    }
-    
-    private function makeWindowsListingRow(array $listChunks) {
-    	/*
-    	 * Windows:
-    	 * 09-15-20  02:00PM                  <DIR> vendor
-    	 * 09-15-20  02:00PM                  243 myfile.txt
-    	 * 09-15-20  02:00PM                  243 my file.txt
-    	 */
-    	
-    	$dateTime = DateTime::createFromFormat('m-d-y h:iA', $listChunks[0] . ' ' . $listChunks[1]);
-    	
-    	$listingRow = new ListingRow();
-    	
-    	$listingRow->size	= $listChunks[2] === '<DIR>' ? null : $listChunks[2];
-    	$listingRow->month	= $dateTime->format('M');
-    	$listingRow->day	= $dateTime->format('d');
-    	$listingRow->time	= $dateTime->format('H:i');
-    	$listingRow->name	= implode(' ', array_slice($listChunks, 3));
-    	$listingRow->type	= $listChunks[2] === '<DIR>' ? 'directory' : 'file';
-    	$listingRow->target	= null;
-    	
-    	return $listingRow;
-    }
-    
-    private function makeLinuxListingRow(array $listChunks) {
-    	/*
-    	 * Linux:
-    	 * drwxrwxr-x 10 myuser mygroup  4096 Sep 15 15:18 vendor
-    	 * drwxrwxr-x 10 myuser mygroup  4096 Sep 15 15:18 myfile.txt
-    	 * drwxrwxr-x 10 myuser mygroup  4096 Sep 15 15:18 my file.txt
-    	 */
-    	
-    	$listingRow = new ListingRow();
-    	
-    	$listingRow->permissions	= $listChunks[0];
-    	$listingRow->number			= $listChunks[1];
-    	$listingRow->owner			= $listChunks[2];
-    	$listingRow->group			= $listChunks[3];
-    	$listingRow->size			= $listChunks[4];
-    	$listingRow->month			= $listChunks[5];
-    	$listingRow->day			= $listChunks[6];
-    	$listingRow->time			= $listChunks[7];
-    	$listingRow->name			= implode(' ', array_slice($listChunks, 8));
-    	$listingRow->type			= $this->rawToType($listChunks[0]);
-    	$listingRow->target			= null;
-    	
-    	if ($listingRow->type === 'link' && strpos($listingRow->name, '->') !== false) {
-    		$files = explode('->', $listingRow->name);
-    		$listingRow->name = $files[0];
-    		$listingRow->target = $files[1];
-    	}
-    	
-    	return $listingRow;
-    }
 }
-
