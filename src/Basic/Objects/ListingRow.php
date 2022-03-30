@@ -1,6 +1,6 @@
 <?php
 
-namespace FtpClient\Objects;
+namespace FtpClient\Basic\Objects;
 
 class ListingRow {
 	public $permissions	= null;

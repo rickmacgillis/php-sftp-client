@@ -9,7 +9,9 @@
  *
  * @copyright Nicolas Tallefourtane http://nicolab.net
  */
-namespace FtpClient;
+namespace FtpClient\Basic;
+
+use FtpClient\FtpException;
 
 /**
  * Wrap the PHP FTP functions

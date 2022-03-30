@@ -9,11 +9,12 @@
  *
  * @copyright Nicolas Tallefourtane http://nicolab.net
  */
-namespace FtpClient;
+namespace FtpClient\Basic;
 
 use \Countable;
 use DateTime;
-use FtpClient\Objects\ListingRow;
+use FtpClient\Basic\Objects\ListingRow;
+use FtpClient\FtpException;
 
 /**
  * The FTP and SSL-FTP client for PHP.
@@ -49,7 +50,7 @@ use FtpClient\Objects\ListingRow;
  *
  * @author Nicolas Tallefourtane <dev@nicolab.net>
  */
-class FtpClient implements Countable
+class BasicFtpClient implements Countable
 {
     /**
      * The connection with the server.
@@ -97,7 +98,7 @@ class FtpClient implements Countable
     /**
      * Call an internal method or a FTP method handled by the wrapper.
      *
-     * Wrap the FTP PHP functions to call as method of FtpClient object.
+     * Wrap the FTP PHP functions to call as method of BasicFtpClient object.
      * The connection is automaticaly passed to the FTP PHP functions.
      *
      * @param  string       $method
@@ -116,7 +117,7 @@ class FtpClient implements Countable
      * @param  string|null $memory            The memory limit, if null is not modified
      * @param  int         $time_limit        The max execution time, unlimited by default
      * @param  bool        $ignore_user_abort Ignore user abort, true by default
-     * @return FtpClient
+     * @return BasicFtpClient
      */
     public function setPhpLimit($memory = null, $time_limit = 0, $ignore_user_abort = true)
     {
@@ -148,7 +149,7 @@ class FtpClient implements Countable
      * @param int    $port
      * @param int    $timeout
      *
-     * @return FtpClient
+     * @return BasicFtpClient
      * @throws FtpException If unable to connect
      */
     public function connect($host, $ssl = false, $port = 21, $timeout = 90)
@@ -205,7 +206,7 @@ class FtpClient implements Countable
      * @param string $username
      * @param string $password
      *
-     * @return FtpClient
+     * @return BasicFtpClient
      * @throws FtpException If the login is incorrect
      */
     public function login($username = 'anonymous', $password = '')
@@ -243,7 +244,7 @@ class FtpClient implements Countable
      * Changes to the parent directory.
      *
      * @throws FtpException
-     * @return FtpClient
+     * @return BasicFtpClient
      */
     public function up()
     {
@@ -351,10 +352,10 @@ class FtpClient implements Countable
     /**
      * Creates a directory.
      *
-     * @see FtpClient::rmdir()
-     * @see FtpClient::remove()
-     * @see FtpClient::put()
-     * @see FtpClient::putAll()
+     * @see BasicFtpClient::rmdir()
+     * @see BasicFtpClient::remove()
+     * @see BasicFtpClient::put()
+     * @see BasicFtpClient::putAll()
      *
      * @param  string $directory The directory
      * @param  bool   $recursive
@@ -389,10 +390,10 @@ class FtpClient implements Countable
     /**
      * Remove a directory.
      *
-     * @see FtpClient::mkdir()
-     * @see FtpClient::cleanDir()
-     * @see FtpClient::remove()
-     * @see FtpClient::delete()
+     * @see BasicFtpClient::mkdir()
+     * @see BasicFtpClient::cleanDir()
+     * @see BasicFtpClient::remove()
+     * @see BasicFtpClient::delete()
      * @param  string       $directory
      * @param  bool         $recursive Forces deletion if the directory is not empty
      * @return bool
@@ -416,9 +417,9 @@ class FtpClient implements Countable
     /**
      * Empty directory.
      *
-     * @see FtpClient::remove()
-     * @see FtpClient::delete()
-     * @see FtpClient::rmdir()
+     * @see BasicFtpClient::remove()
+     * @see BasicFtpClient::delete()
+     * @see BasicFtpClient::rmdir()
      *
      * @param  string $directory
      * @return bool
@@ -440,11 +441,11 @@ class FtpClient implements Countable
     /**
      * Remove a file or a directory.
      *
-     * @see FtpClient::rmdir()
-     * @see FtpClient::cleanDir()
-     * @see FtpClient::delete()
+     * @see BasicFtpClient::rmdir()
+     * @see BasicFtpClient::cleanDir()
+     * @see BasicFtpClient::delete()
      * @param  string $path      The path of the file or directory to remove
-     * @param  bool   $recursive Is effective only if $path is a directory, {@see FtpClient::rmdir()}
+     * @param  bool   $recursive Is effective only if $path is a directory, {@see BasicFtpClient::rmdir()}
      * @return bool
      */
     public function remove($path, $recursive = false)
@@ -515,10 +516,10 @@ class FtpClient implements Countable
     /**
      * Scan a directory and returns the details of each item.
      *
-     * @see FtpClient::nlist()
-     * @see FtpClient::rawlist()
-     * @see FtpClient::parseRawList()
-     * @see FtpClient::dirSize()
+     * @see BasicFtpClient::nlist()
+     * @see BasicFtpClient::rawlist()
+     * @see BasicFtpClient::parseRawList()
+     * @see BasicFtpClient::dirSize()
      * @param  string $directory
      * @param  bool   $recursive
      * @return array
@@ -607,7 +608,7 @@ class FtpClient implements Countable
      *
      * @param  string       $remote_file
      * @param  string       $content
-     * @return FtpClient
+     * @return BasicFtpClient
      * @throws FtpException When the transfer fails
      */
     public function putFromString($remote_file, $content)
@@ -628,7 +629,7 @@ class FtpClient implements Countable
      * Uploads a file to the server.
      *
      * @param  string       $local_file
-     * @return FtpClient
+     * @return BasicFtpClient
      * @throws FtpException When the transfer fails
      */
     public function putFromPath($local_file)
@@ -652,7 +653,7 @@ class FtpClient implements Countable
      * @param  string    $source_directory
      * @param  string    $target_directory
      * @param  int       $mode
-     * @return FtpClient
+     * @return BasicFtpClient
      */
     public function putAll($source_directory, $target_directory, $mode = FTP_BINARY)
     {
@@ -699,7 +700,7 @@ class FtpClient implements Countable
      * @param  string $source_directory The remote directory
      * @param  string $target_directory The local directory
      * @param  int    $mode
-     * @return FtpClient
+     * @return BasicFtpClient
      */
     public function getAll($source_directory, $target_directory, $mode = FTP_BINARY)
     {
@@ -734,9 +735,9 @@ class FtpClient implements Countable
     /**
      * Returns a detailed list of files in the given directory.
      *
-     * @see FtpClient::nlist()
-     * @see FtpClient::scanDir()
-     * @see FtpClient::dirSize()
+     * @see BasicFtpClient::nlist()
+     * @see BasicFtpClient::scanDir()
+     * @see BasicFtpClient::dirSize()
      * @param  string       $directory The directory, by default is the current directory
      * @param  bool         $recursive
      * @return array
@@ -833,9 +834,9 @@ class FtpClient implements Countable
     /**
      * Parse raw list.
      *
-     * @see FtpClient::rawlist()
-     * @see FtpClient::scanDir()
-     * @see FtpClient::dirSize()
+     * @see BasicFtpClient::rawlist()
+     * @see BasicFtpClient::scanDir()
+     * @see BasicFtpClient::dirSize()
      * @param  array $rawlist
      * @return array
      */
@@ -877,7 +878,7 @@ class FtpClient implements Countable
 
                 $items[$key] = (array)$listItems;
             } else {
-                // the key is the path, behavior of FtpClient::rawlist() method()
+                // the key is the path, behavior of BasicFtpClient::rawlist() method()
                 $items[$key] = (array)$listItems;
             }
         }
@@ -921,10 +922,10 @@ class FtpClient implements Countable
     }
 
     /**
-     * Set the wrapper which forward the PHP FTP functions to use in FtpClient instance.
+     * Set the wrapper which forward the PHP FTP functions to use in BasicFtpClient instance.
      *
      * @param  FtpWrapper $wrapper
-     * @return FtpClient
+     * @return BasicFtpClient
      */
     protected function setWrapper(FtpWrapper $wrapper)
     {

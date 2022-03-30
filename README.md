@@ -1,4 +1,6 @@
-# nicolab/php-ftp-client
+# PHP FTP Client
+
+Originally forked from `nicolab/php-ftp-client`, this project now supports Windows FTP and SSH FTP connections by mashing it with `lodev09/php-ssh2`.
 
 A flexible FTP and SSL-FTP client for PHP.
 This lib provides helpers easy to use to manage the remote files.
@@ -8,9 +10,9 @@ This lib provides helpers easy to use to manage the remote files.
 
 ## Install
 
-  * Use composer: _require_ `nicolab/php-ftp-client`
+  * Use composer: _require_ `rickmacgillis/php-ftp-client`
 
-  * Or use GIT clone command: `git clone git@github.com:Nicolab/php-ftp-client.git`
+  * Or use GIT clone command: `git clone git@github.com:rickmacgillis/php-ftp-client.git`
 
   * Or download the library, configure your autoloader or include the 3 files of `php-ftp-client/src/FtpClient` directory.
 
@@ -227,25 +229,11 @@ $ftp->search('/(.*)\.png$/i');
 ```
 
 
-## API doc
-
-See the [source code](https://github.com/Nicolab/php-ftp-client/tree/master/src/FtpClient) for more details.
-It is fully documented :blue_book:
-
-
-## Testing
-
-Tested with "atoum" unit testing framework.
-
-
 ## License
 
-[MIT](https://github.com/Nicolab/php-ftp-client/blob/master/LICENSE) c) 2014, Nicolas Tallefourtane.
+Both original codebases and this project are released under the [MIT license](https://github.com/rickmacgillis/php-ftp-client/blob/master/LICENSE).
 
-
-## Author
-
-| [![Nicolas Tallefourtane - Nicolab.net](http://www.gravatar.com/avatar/d7dd0f4769f3aa48a3ecb308f0b457fc?s=64)](http://nicolab.net) |
-|---|
-| [Nicolas Talle](http://nicolab.net) |
-| [![Make a donation via Paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=PGRH4ZXP36GUC) |
+## Credits (Alphabetical)
+1. Jovanni Lo (lodev09) for the original SSH2 code.
+2. Nicolas Talle (nicolab) for the original FTP client code and inspiration for extending his package.
+3. Rick Mac Gillis (rickmacgillis) for merging the two codebases and providing a unified interface for easy use no matter which type of authentication you need for FTP.

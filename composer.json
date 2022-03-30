@@ -1,27 +1,16 @@
 {
   "name": "rickmacgillis/php-ftp-client",
   "type": "library",
-  "description": "A flexible FTP and SSL-FTP client for PHP. This lib provides helpers easy to use to manage the remote files.",
+  "description": "A flexible FTP, SSL-FTP, and SSH-based SFTP client for PHP. This lib provides helpers that are easy to use to manage the remote files.",
   "license": "MIT",
-  "keywords": ["ftp", "sftp", "ssl-ftp", "ssl", "file", "server", "lib", "helper"],
-
-	"authors"            : [
-    {
-      "name"     : "Nicolas Tallefourtane",
-      "email"    : "dev@nicolab.net",
-      "homepage" : "http://nicolab.net"
-    },
-    {
-      "name"     : "Rick Mac Gillis",
-      "email"    : "no_reply@rickmacgillis.com",
-      "homepage" : "https://rickmacgillis.com"
-    }
-  ],
+  "keywords": ["ftp", "sftp", "ssl-ftp", "ssh-ftp", "ssh", "ssl", "file", "server", "lib", "helper"],
   "require": {
-    "php": ">=5.4",
+    "php": ">=7.2",
     "ext-ftp": "*"
   },
   "autoload": {
-    "psr-0": {"FtpClient": "src/"}
+    "psr-0": {
+		"FtpClient": "src/"
+	}
   }
 }
