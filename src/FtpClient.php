@@ -67,6 +67,18 @@ class FtpClient {
 		}
 	}
 	
+	public function isConnected() {
+		if (!is_null($this->basicClient)) {
+			return is_resource($this->basicClient->getConnection());
+		}
+		
+		if (!is_null($this->sftpClient)) {
+			return $this->sftpClient->isConnected();
+		}
+		
+		return false;
+	}
+	
 	public function __call(string $method, array $args) {
 		if ($this->isSsh) {
 			return call_user_func_array([$this->sftpClient, $method], $args);
@@ -82,7 +94,9 @@ class FtpClient {
 			$auth = new Key($this->user, $this->pubKey, $this->privKey);
 		}
 		
-		$this->sftpClient = new SFTP($this->host, $auth, $this->port);
+		$this->sftpClient = new SFTP();
+		$this->sftpClient->setTimeout($this->timeout);
+		$this->sftpClient->connect($this->host, $auth, $this->port);
 	}
 	
 	private function setBasicHandler() {

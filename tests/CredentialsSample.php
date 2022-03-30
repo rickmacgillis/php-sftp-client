@@ -6,6 +6,8 @@ class Credentials {
 		"user" => "testuser",
 		"pass" => "testpass",
 		"port" => 22,
+		'timeout' => 30,
+		"pasv" => false,
 	];
 	
 	public static array $basicCredentials = [
@@ -13,5 +15,7 @@ class Credentials {
 		"user" => "testuser",
 		"pass" => "testpass",
 		"port" => 21,
+		'timeout' => 30,
+		"pasv" => true,
 	];
 }

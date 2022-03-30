@@ -15,16 +15,20 @@ class TestCase extends PhpUnitTestCase {
 	}
 	
 	protected static function getSftpCreds() {
-		$this->throwIfMissingCredentials();
+		static::throwIfMissingCredentials();
 		return Credentials::$sftpCredentials;
 	}
 	
 	protected static function getBasicCreds() {
-		$this->throwIfMissingCredentials();
+		static::throwIfMissingCredentials();
 		return Credentials::$basicCredentials;
 	}
 	
 	private static function throwIfMissingCredentials() {
+		if (file_exists(__DIR__ . '/Credentials.php')) {
+			require_once(__DIR__ . '/Credentials.php');
+		}
+		
 		if (class_exists('Credentials') === false) {
 			throw new Exception(
 				"You must rename CredentialsSample.php to Credentials.php in " .

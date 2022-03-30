@@ -7,14 +7,13 @@ use FtpClient\FtpException;
 class SFTP extends SSH2 {
     protected $sftp;
 
-    public function __construct($host, Authentication $auth, $port = 22) {
-        parent::__construct($host, $auth, $port);
+    public function connect($host, Authentication $auth, $port = 22) {
+    	parent::connect($host, $auth, $port);
         if ($this->isConnected()) {
             $this->sftp = ssh2_sftp($this->conn);
         } else {
         	throw new FtpException('SFTP Not Connected to host');
         }
-
     }
     public function __call($func, $args) {
         if (!$this->isConnected()) return false;

@@ -1,0 +1,2 @@
+Test file for FTP and SFTP project.
+This file should be removed automatically very shortly.

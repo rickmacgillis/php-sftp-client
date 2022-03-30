@@ -36,7 +36,7 @@ class SSH2 {
     protected $conn;
     protected $authentication = false;
 
-    public function __construct($host, Authentication $auth, $port = 22) {
+    public function connect($host, Authentication $auth, $port = 22) {
         $this->conn = ssh2_connect($host, $port);
         if ($this->isConnected()) {
             switch (get_class($auth)) {

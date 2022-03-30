@@ -1,4 +1,4 @@
-# PHP FTP Client
+# PHP SFTP Client
 
 Originally forked from `nicolab/php-ftp-client`, this project now supports Windows FTP and SSH FTP connections by mashing it with `lodev09/php-ssh2`.
 
@@ -237,3 +237,6 @@ Both original codebases and this project are released under the [MIT license](ht
 1. Jovanni Lo (lodev09) for the original SSH2 code.
 2. Nicolas Talle (nicolab) for the original FTP client code and inspiration for extending his package.
 3. Rick Mac Gillis (rickmacgillis) for merging the two codebases and providing a unified interface for easy use no matter which type of authentication you need for FTP.
+
+## TODO
+1. Add better test coverage.
