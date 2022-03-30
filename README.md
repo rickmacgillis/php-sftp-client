@@ -1,8 +1,8 @@
 # PHP SFTP Client
 
-Originally forked from `nicolab/php-ftp-client`, this project now supports Windows FTP and SSH FTP connections by mashing it with `lodev09/php-ssh2`.
+Originally forked from `nicolab/php-ftp-client`, this project now supports Windows FTP and SSH FTP connections by mashing it with `phpseclib/phpseclib`.
 
-A flexible FTP and SSL-FTP client for PHP.
+A flexible FTP and SSH-FTP client for PHP.
 This lib provides helpers easy to use to manage the remote files.
 
 > This package is aimed to remain simple and light. It's only a wrapper of the FTP native API of PHP, with some useful helpers. If you want to customize some methods, you can do this by inheriting one of the [3 classes of the package](src/FtpClient).
@@ -29,7 +29,7 @@ $ftp->login($login, $password);
 
 OR
 
-Connect to a server FTP via SSL (on port 990 or another port) :
+Connect to a server FTP via SSH (on port 22 or another port) :
 
 ```php
 $ftp = new \FtpClient\FtpClient();
@@ -231,10 +231,10 @@ $ftp->search('/(.*)\.png$/i');
 
 ## License
 
-Both original codebases and this project are released under the [MIT license](https://github.com/rickmacgillis/php-ftp-client/blob/master/LICENSE).
+All code is released under the [MIT license](https://github.com/rickmacgillis/php-ftp-client/blob/master/LICENSE).
 
-## Credits (Alphabetical)
-1. Jovanni Lo (lodev09) for the original SSH2 code.
+## Credits
+1. PHPSecLib team for building the SFTP integration components.
 2. Nicolas Talle (nicolab) for the original FTP client code and inspiration for extending his package.
 3. Rick Mac Gillis (rickmacgillis) for merging the two codebases and providing a unified interface for easy use no matter which type of authentication you need for FTP.
 

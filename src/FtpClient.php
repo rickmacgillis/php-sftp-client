@@ -2,10 +2,10 @@
 
 namespace FtpClient;
 
-use FtpClient\Ssh\Password;
-use FtpClient\Ssh\Key;
-use FtpClient\Ssh\SFTP;
 use FtpClient\Basic\BasicFtpClient;
+use phpseclib3\Net\SFTP;
+use phpseclib3\Crypt\PublicKeyLoader;
+use phpseclib3\Net\SSH2;
 
 class FtpClient {
 	private $ftp = null;
@@ -51,12 +51,12 @@ class FtpClient {
 		$this->pass = $password;
 	}
 	
-	public function setPubKey(string $username) {
-		$this->user = $username;
+	public function setPubKey(string $pubKey) {
+		$this->pubKey = $pubKey;
 	}
 	
-	public function setPrivKey(string $password) {
-		$this->pass = $password;
+	public function setPrivKey(string $privKey) {
+		$this->privKey = $privKey;
 	}
 	
 	public function connect() {
@@ -88,15 +88,22 @@ class FtpClient {
 	}
 	
 	private function setSshHandler() {
-		if (!empty($this->pass)) {
-			$auth = new Password($this->user, $this->pass);
-		} else {
-			$auth = new Key($this->user, $this->pubKey, $this->privKey);
+		define('NET_SSH2_LOGGING', SSH2::LOG_COMPLEX);
+		$this->sftpClient = new SFTP($this->host, $this->port, $this->timeout);
+		
+		$password = $this->pass;
+		if (!empty($this->privKey)) {
+			$keyPass = empty($this->pass) ? false : $this->pass;
+			$password = PublicKeyLoader::loadPrivateKey($this->privKey, $keyPass);
+		} else if (!empty($this->pubKey)) {
+			$password = PublicKeyLoader::loadPublicKey($this->pubKey);
 		}
 		
-		$this->sftpClient = new SFTP();
-		$this->sftpClient->setTimeout($this->timeout);
-		$this->sftpClient->connect($this->host, $auth, $this->port);
+		try {
+			$this->sftpClient->login($this->user, $password);
+		} catch (\RuntimeException $e) {
+			var_dump($this->sftpClient->getErrors());
+		}
 	}
 	
 	private function setBasicHandler() {

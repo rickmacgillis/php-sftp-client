@@ -8,7 +8,7 @@ use FtpClient\FtpClient;
 class SftpTest extends TestCase {
 	private ?FtpClient $ftp = null;
 	
-	public function testCanConnectToFtpServer() {
+	public function testCanConnectToSftpServer() {
 		$this->makeFtp();
 		
 		$this->assertInstanceOf(FtpClient::class, $this->ftp);
@@ -23,6 +23,7 @@ class SftpTest extends TestCase {
 		$this->ftp->setPass($creds['pass']);
 		$this->ftp->setUser($creds['user']);
 		$this->ftp->setPort($creds['port']);
+		$this->ftp->setTimeout($creds['timeout']);
 		$this->ftp->setUseSsh(true);
 		
 		$this->ftp->connect();
