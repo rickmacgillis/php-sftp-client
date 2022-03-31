@@ -88,7 +88,6 @@ class FtpClient {
 	}
 	
 	private function setSshHandler() {
-		define('NET_SSH2_LOGGING', SSH2::LOG_COMPLEX);
 		$this->sftpClient = new SFTP($this->host, $this->port, $this->timeout);
 		
 		$password = $this->pass;
@@ -99,11 +98,7 @@ class FtpClient {
 			$password = PublicKeyLoader::loadPublicKey($this->pubKey);
 		}
 		
-		try {
-			$this->sftpClient->login($this->user, $password);
-		} catch (\RuntimeException $e) {
-			var_dump($this->sftpClient->getErrors());
-		}
+		$this->sftpClient->login($this->user, $password);
 	}
 	
 	private function setBasicHandler() {

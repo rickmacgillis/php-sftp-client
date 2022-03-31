@@ -16,7 +16,7 @@ class SftpTest extends TestCase {
 	}
 	
 	private function makeFtp() {
-		$creds = static::getBasicCreds();
+		$creds = static::getSftpCreds();
 		
 		$this->ftp = new FtpClient();
 		$this->ftp->setHost($creds['host']);
