@@ -1,5 +1,5 @@
 {
-  "name": "rickmacgillis/php-sftp-client",
+  "name": "rickmacgillis/sftp-and-ftp-client",
   "type": "library",
   "description": "A flexible FTP, SSL-FTP, and SSH-based SFTP client for PHP. This lib provides helpers that are easy to use to manage the remote files.",
   "license": "MIT",
