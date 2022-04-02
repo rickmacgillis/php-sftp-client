@@ -2,20 +2,13 @@
 
 use FtpClient\FtpClient;
 
+require_once(__DIR__ . '/FtpFunctionsTestAbstract.php');
+
 /**
  * @group sftp-tests
  */
-class SftpTest extends TestCase {
-	private ?FtpClient $ftp = null;
-	
-	public function testCanConnectToSftpServer() {
-		$this->makeFtp();
-		
-		$this->assertInstanceOf(FtpClient::class, $this->ftp);
-		$this->assertTrue($this->ftp->isConnected());
-	}
-	
-	private function makeFtp() {
+class SftpTest extends FtpFunctionsTestAbstract {
+	protected function makeFtp() {
 		$creds = static::getSftpCreds();
 		
 		$this->ftp = new FtpClient();

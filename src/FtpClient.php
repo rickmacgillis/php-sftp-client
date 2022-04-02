@@ -87,6 +87,70 @@ class FtpClient {
 		}
 	}
 	
+	public function mkdir(string $dir) : bool {
+		return $this->ftpCall('mkdir', 'mkdir', [
+			$dir
+		]);
+	}
+	
+	public function isDir(string $item) : bool {
+		return $this->ftpCall('is_dir', 'isDir', [
+			$item
+		]);
+	}
+	
+	public function rmdir(string $dir) : bool {
+		return $this->ftpCall('rmdir', 'rmdir', [
+			$dir
+		]);
+	}
+	
+	public function scanDir(string $dir) {
+		if ($this->isSsh) {
+			return $this->normalizeScanDir($this->sftpClient->rawlist($dir));
+		}
+		
+		return $this->basicClient->scanDir($dir);
+	}
+	
+	public function putFromString(string $filename, string $contents) {
+		return $this->ftpCall('put', 'putFromString', [
+			$filename, $contents
+		]);
+	}
+	
+	public function getContent(string $filename) {
+		$out = $this->ftpCall('get', 'getContent', [
+			$filename
+		]);
+		
+		return is_null($out) ? false : $out;
+	}
+	
+	public function modifiedTime(string $filename) : int {
+		return $this->ftpCall('filemtime', 'modifiedTime', [
+			$filename
+		]);
+	}
+	
+	public function size(string $filename) : int {
+		return $this->ftpCall('filesize', 'size', [
+			$filename
+		]);
+	}
+	
+	public function rename(string $origFile, string $targetFile) : bool {
+		return $this->ftpCall('rename', 'rename', [
+			$origFile, $targetFile
+		]);
+	}
+	
+	public function delete(string $filename) : bool {
+		return $this->ftpCall('delete', 'delete', [
+			$filename
+		]);
+	}
+	
 	private function setSshHandler() {
 		$this->sftpClient = new SFTP($this->host, $this->port, $this->timeout);
 		
@@ -106,5 +170,30 @@ class FtpClient {
 		$this->basicClient->connect($this->host, false, $this->port, $this->timeout);
 		$this->basicClient->login($this->user, $this->pass);
 		$this->basicClient->pasv($this->pasv);
+	}
+	
+	private function ftpCall(string $sftpMethod, string $ftpMethod, array $args) {
+		if ($this->isSsh) {
+			return call_user_func_array([$this->sftpClient, $sftpMethod], $args);
+		}
+		
+		return call_user_func_array([$this->basicClient, $ftpMethod], $args);
+	}
+	
+	private function normalizeScanDir(array $output) : array {
+		$out = [];
+		foreach ($output as $filename => $filedata) {
+			$out[$filename] = [
+				'size'			=> $filedata['size'],
+				'month'			=> date("M", $filedata['mtime']),
+				'day'			=> date("d", $filedata['mtime']),
+				'time'			=> date('H:i', $filedata['mtime']),
+				'name'			=> $filedata['filename'],
+				'type'			=> $filedata['type'] === NET_SFTP_TYPE_DIRECTORY ? 'directory' : 'file',
+				'target'		=> null,
+			];
+		}
+		
+		return $out;
 	}
 }
