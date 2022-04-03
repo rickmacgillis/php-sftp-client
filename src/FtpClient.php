@@ -100,7 +100,7 @@ class FtpClient {
 	}
 	
 	public function rmdir(string $dir) : bool {
-		return $this->ftpCall('rmdir', 'rmdir', [
+		return $this->ftpCall('delete', 'rmdir', [
 			$dir
 		]);
 	}
