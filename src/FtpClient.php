@@ -79,7 +79,7 @@ class FtpClient {
 		return false;
 	}
 	
-	public function __call(string $method, array $args) {
+	public function __call(string $method, array $args = []) {
 		if ($this->isSsh) {
 			return call_user_func_array([$this->sftpClient, $method], $args);
 		} else {
@@ -172,7 +172,7 @@ class FtpClient {
 		$this->basicClient->pasv($this->pasv);
 	}
 	
-	private function ftpCall(string $sftpMethod, string $ftpMethod, array $args) {
+	private function ftpCall(string $sftpMethod, string $ftpMethod, array $args = []) {
 		if ($this->isSsh) {
 			return call_user_func_array([$this->sftpClient, $sftpMethod], $args);
 		}
